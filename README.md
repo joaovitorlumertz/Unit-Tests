@@ -4,13 +4,13 @@ O código dos testes é tão importante quanto o código de produção.
 A seguir, veremos como podemos aplicar alguns conceitos que podem nos ajudar no desenvolvimento de testes legíveis e bem estruturados.
 
 # Sumário
-1. [Falsos positivos]()
-2. [Desalocar propriedades da classe de teste]()
-3. [Given - When - Then]()
-4. [Fixtures]()
-5. [Spies]()
-6. [Injeção de dependência]()
-7. [Snapshots]()
+1. [Falsos positivos](#1-falsos-positivos)
+2. [Desalocar propriedades da classe de teste](#2-desalocar-propriedades-da-classe-de-teste)
+3. [Given - When - Then](#3-given---when---then)
+4. [Fixtures](#4-fixtures)
+5. [Spies - calledMethods](#5-spies-enum-calledmethods)
+6. [Injeção de dependência](#6-injeção-de-dependência)
+7. [Snapshots](#7-snapshots)
 
 ## 1. Falsos positivos
 Para que um teste seja efeitivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O XCode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
@@ -47,6 +47,7 @@ func test_doSomething_shouldPresentAlert() {
 }
 ```
 
+[back to top](#sumário)
 ## 2. Desalocar propriedades da classe de teste
 
 Estamos acostumados a definir propriedades em nossas classes de testes. Normalmente, as definimos em um método `setUp` para que sejam configuradas corretamente para cada método de teste.
@@ -62,11 +63,11 @@ import XCTest
 class SomeClass: NSObject {
     
     func foo() {
-        print("\n ===== foo from \(self) \n")
+        print(">>>>> foo from \(self)")
     }
     
     func bar() {
-        print("\n ===== bar from \(self) \n")
+        print(">>>>> bar from \(self)")
     }
     
 }
@@ -92,19 +93,16 @@ SomeClassTestCase.defaultTestSuite.run()
 O log gerado pelo caso de teste foi:
 
 ```
-Test Suite 'SomeClassTestCase' started at 2023-02-08 14:47:21.483
-Test Case '-[__lldb_expr_10.SomeClassTestCase test_bar]' started.
+Test Suite 'SomeClassTestCase' started at 2023-02-09 09:04:52.950
+Test Case '-[__lldb_expr_1.SomeClassTestCase test_bar]' started.
+>>>>> bar from <__lldb_expr_1.SomeClass: 0x60000362c050>
+Test Case '-[__lldb_expr_1.SomeClassTestCase test_bar]' passed (0.052 seconds).
+Test Case '-[__lldb_expr_1.SomeClassTestCase test_foo]' started.
+>>>>> foo from <__lldb_expr_1.SomeClass: 0x60000362c080>
+Test Case '-[__lldb_expr_1.SomeClassTestCase test_foo]' passed (0.002 seconds).
+Test Suite 'SomeClassTestCase' passed at 2023-02-09 09:04:53.061.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.054 (0.111) seconds
 
- ===== bar from <__lldb_expr_10.SomeClass: 0x600001648360> 
-
-Test Case '-[__lldb_expr_10.SomeClassTestCase test_bar]' passed (0.010 seconds).
-Test Case '-[__lldb_expr_10.SomeClassTestCase test_foo]' started.
-
- ===== foo from <__lldb_expr_10.SomeClass: 0x6000016483a0> 
-
-Test Case '-[__lldb_expr_10.SomeClassTestCase test_foo]' passed (0.001 seconds).
-Test Suite 'SomeClassTestCase' passed at 2023-02-08 14:47:21.496.
-	 Executed 2 tests, with 0 failures (0 unexpected) in 0.011 (0.013) seconds
 
 ```
 Observe que para cada método de teste há uma instância diferente da classe `SomeClass`. Em resumo, cada método de teste cria uma nova instância da classe de teste.
@@ -185,6 +183,8 @@ Test Suite 'SomeClassTestCase' passed at 2023-02-08 21:51:16.451.
 
 Ao término da execução de cada teste a propriedade é desalocada, com isso diminuimos o consumo de memória.
 
+[back to top](#sumário)
+
 ## 3. Given - When - Then
 Given-When-Then é um estilo de representação de testes. Foi originiado junto ao BDD (Behavior Driven Development) com o intuito de documentar requisitos e testes. De forma simples, significa que o teste será dividido em três partes:
 
@@ -196,62 +196,62 @@ Given-When-Then é um estilo de representação de testes. Foi originiado junto 
 
 **Antes**
 ```swift
-func test_viewDidAppear_withAuthenticatedUserWithQRCode_shouldCallRepositoryAddQRCode() {
-    let cpf = "12345678910"
-    stateManagerSpy.isUserLogged = true
-    stateManagerSpy.cpf = cpf
-    let expectedQRCode = QRCode.dummy(customerCPF: cpf)
-    userDefaultsSpy.valueSet = expectedQRCode
-    sut.viewDidAppear()
-    XCTAssertTrue(repositorySpy.isAddQRCodeCalled)
-    XCTAssertEqual(repositorySpy.addQRCodeParam, expectedQRCode)
+
+func fetchUserData(userId: Int) {
+    requester.request(.fetchUserData(userId)) { [weak self] result in
+        switch result {
+            case .success(let data):
+                self?.output?.fetchUserDataSucceeded(data)
+            case .error(let error):
+                self?.output?.fetchUserDataFailed(error)
+        }
+    }
+}
+
+func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
+    let userData = userData.dummy()
+    requesterStub.setReturn(userData)
+    sut.fetchUserData(userId: 1)
+    XCTAssertTrue(outputSpy.fetchUserDataSucceededCalled)
 }
 ```
 
 **Depois**
 ```swift
-func test_viewDidAppear_withAuthenticatedUserWithQRCode_shouldCallRepositoryAddQRCode() {
+func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
     // given
-    let cpf = "12345678910"
-    stateManagerSpy.isUserLogged = true
-    stateManagerSpy.cpf = cpf
-    let expectedQRCode = QRCode.dummy(customerCPF: cpf)
-    userDefaultsSpy.valueSet = expectedQRCode
+    let userData = userData.dummy()
+    requesterStub.setReturn(userData)
 
     // when
-    sut.viewDidAppear()
+    sut.fetchUserData(userId: 1)
     
     // then
-    XCTAssertTrue(repositorySpy.isAddQRCodeCalled)
-    XCTAssertEqual(repositorySpy.addQRCodeParam, expectedQRCode)
+    XCTAssertTrue(outputSpy.fetchUserDataSucceededCalled)
 }
 ```
+[back to top](#sumário)
 
 ### Helpers
 Para diminuir a complexidade e melhorar o reaproveitamento de código em nossos testes, utilizamos funções auxiliares (helpers) que abstraem parte da lógica de nossos casos de teste (makeSUT, givenSomeState, whenFetchData, etc...). Veja um exemplo de como podemos melhorar o teste anterior:
 
 ```swift
 // MARK: - Given
-private func givenAuthenticatedUserWithQRCode() -> QRCode {
-    let cpf = "12345678910"
-    stateManagerSpy.isUserLogged = true
-    stateManagerSpy.cpf = cpf
-    let qrCode = QRCode.dummy(customerCPF: cpf)
-    userDefaultsSpy.valueSet = qrCode
-    return qrCode
+private func givenFetchUserDataSucceeded() {
+    let userData = userData.dummy()
+    requesterStub.setReturn(userData)
 }
 
-// MARK: - viewDidAppear
-func test_viewDidAppear_withAuthenticatedUserWithQRCode_shouldCallRepositoryAddQRCode() {
-     // given
-    let expectedQRCode = givenAuthenticatedUserWithQRCode()
+// MARK: - fetch user data
+func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
+    // given
+    givenFetchUserDataSucceeded()
         
     // when
-    sut.viewDidAppear()
+    sut.fetchUserData(userId: 1)
         
     // then
-    XCTAssertTrue(repositorySpy.isAddQRCodeCalled)
-    XCTAssertEqual(repositorySpy.addQRCodeParam, expectedQRCode)
+    XCTAssertTrue(outputSpy.fetchUserDataSucceededCalled)
 }
 ```
 
@@ -259,56 +259,39 @@ Agora veja outro exemplo, neste caso, estamos abstraindo a etapa **When** do cas
 
 **Antes**
 ```swift
-func test_showFormAboutYouInfo_shouldSetCurrentViewController_withViewControllerOfCorrectType() {
+func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
     // given
-    let dummy = RequestCardAboutYouViewState()
-
+    givenFetchUserDataSucceeded()
+        
     // when
-    sut.showFormAboutYouInfo(statePersonalInfo: dummy)
-
+    sut.fetchUserData(userId: 1)
+        
     // then
-    XCTAssertTrue(sut.currentViewController is RequestCardAboutYouViewController)
-}
-
-func test_showFormAboutYouInfo_shouldPushViewControllerOfCorrectType() {
-    // given
-    let dummy = RequestCardAboutYouViewState()
-
-    // when
-    sut.showFormAboutYouInfo(statePersonalInfo: dummy)
-
-    // then
-    XCTAssertTrue(navigationControllerSpy.pushViewController is RequestCardAboutYouViewController)
+    XCTAssertTrue(outputSpy.fetchUserDataSucceededCalled)
 }
 ```
 
 **Depois**
 ```swift
 // MARK: - When
-private func whenShowFormAboutYouInfo() {
-    let dummy = RequestCardAboutYouViewState()
-
-    sut.showFormAboutYouInfo(statePersonalInfo: dummy)
+private func whenFetchUserData() {
+    sut.fetchUserData(userId: 1)
 }
 
 // MARK: - showFormAboutYouInfo
-func test_showFormAboutYouInfo_shouldSetCurrentViewController_withViewControllerOfCorrectType() {
+func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
+    // given
+    givenFetchUserDataSucceeded()
+
     // when
-    whenShowFormAboutYouInfo()
+    whenFetchUserData()
 
     // then
-    XCTAssertTrue(sut.currentViewController is RequestCardAboutYouViewController)
-}
-
-func test_showFormAboutYouInfo_shouldPushViewControllerOfCorrectType() {
-    // when
-    whenShowFormAboutYouInfo()
-
-    // then
-    XCTAssertTrue(navigationControllerSpy.pushViewController is RequestCardAboutYouViewController)
+    XCTAssertTrue(outputSpy.fetchUserDataSucceededCalled)
 }
 
 ```
+[back to top](#sumário)
 
 ## 4. Fixtures
 // TODO
