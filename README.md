@@ -1,21 +1,32 @@
-# Testes unitários
-Testes unitários são extremamente úteis para verificar se nosso código funciona conforme o esperado.
+# 1. Testes unitários
+Os testes unitários, como o próprio nome diz, servem para testar uma unidade do código.
 
-O código dos testes é tão importante quanto o código de produção. 
+🧐 O que é uma unidade?
+- Uma unidade é uma função ou método.
 
-A seguir, veremos como podemos aplicar alguns conceitos que podem nos ajudar no desenvolvimento de testes legíveis e bem estruturados.
+### Testes unitários x Teste de integração
+É muito comum, confundir testes unitários com testes de integração, porém, eles são diferentes. 
 
-# Sumário
-1. [Falsos positivos](#1-falsos-positivos)
-2. [Given - When - Then](#2-given---when---then)
-3. [A quantidade de asserçoes por teste importa?](#3-a-quantidade-de-asserções-por-teste-importa)
-4. [Desalocar propriedades da classe de teste](#4-desalocar-propriedades-da-classe-de-teste)
-5. [Fixtures](#5-fixtures)
-6. [Spies - calledMethods](#6-spies-enum-calledmethods)
-7. [Injeção de dependência](#7-injeção-de-dependência)
-8. [Snapshots](#8-snapshots)
+Um teste de **integração** testa **mútiplas unidades** do código para garantir que elas funcionam juntas como o esperado. Os testes de integração são realizados após os testes de unidade e podem pegar problemas que não foram detectados pelos testes de unidade, como problemas em fluxos de dados e comunicação entre componentes.
 
-## 1. Falsos positivos
+Um teste de **unidade** testam **unidades individuais** do código, como funções ou métodos **isolados** do restante do sistema. Eles são muito utilizados durante o desenvolvimento para encontrar bugs mais cedo. A meta dos testes de unidade é garantir que cada unidade do código funcione como esperado.
+
+### Vantagens dos testes unitários
+- É o tipo de teste mais simples de implementar;
+- Refatoração do código com segurança;
+- Encontrar bugs cedo;
+- Dimiuir o aclopamento do código.
+
+### O que testar?
+- Funções públicas (internal, pulic, open);
+- Comunicação entre objetos;
+- Regras de negócio.
+
+## 2. Nomenclatura
+
+## 3. Injeção de dependência
+
+## 4. Falsos positivos
 Para que um teste seja efeitivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O XCode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
 
 Veja o exemplo a seguir:
@@ -53,7 +64,7 @@ func test_doSomething_shouldPresentAlert() {
 
 [back to top](#sumário)
 
-## 2. Given - When - Then
+## 5. Given - When - Then
 Given-When-Then é um estilo de representação de testes. Foi originiado junto ao BDD (Behavior Driven Development) com o intuito de documentar requisitos e testes. De forma simples, significa que o teste será dividido em três partes:
 
 - **Given**: Definimos a configuração do estado inicial de um cenário de teste. Por exemplo, podemos configurar um Stub, definir valores em propriedades da classe em teste (sut) ou chamar alguma função que define o estado inicial para o que irá ser testado.
@@ -161,7 +172,7 @@ func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
 ```
 [back to top](#sumário)
 
-## 3. A quantidade de asserções por teste importa?
+## 6. A quantidade de asserções por teste importa?
 Uma prática muito comum no TDD é utilizar uma única asserção por teste. Com métodos de teste bem nomeados, quando o teste falhar, você saberá exatamente onde está o problema porque não há ambiguidade entre várias condições. Um teste com muitas afirmações torna difícil fornecer um nome ou descrição significativa. Contudo, isso não significa que todos os testes devam ter apenas uma afirmação. Conceitualmente, afirmar propriedades de um mesmo objeto pode-se considerar um único assert.
 
 🚩 Os testes a seguir realizam mais de uma validação:
@@ -304,7 +315,7 @@ func test_loginSucceeded_shouldNotifyLogin() {
 
 [back to top](#sumário)
 
-## 4. Desalocar propriedades da classe de teste
+## 7. Desalocar propriedades da classe de teste
 
 Estamos acostumados a definir propriedades em nossas classes de testes. Normalmente, as definimos em um método `setUp` para que sejam configuradas corretamente para cada método de teste.
 
@@ -440,15 +451,6 @@ Test Suite 'SomeClassTestCase' passed at 2023-02-08 21:51:16.451.
 Ao término da execução de cada teste a propriedade é desalocada, com isso diminuimos o consumo de memória.
 
 [back to top](#sumário)
-
-## 5. Fixtures
-// TODO
-
-## 6. Spies (enum calledMethods)
-// TODO
-
-## 7. Injeção de dependência
-// TODO
 
 ## 8. Snapshots
 Os testes de snapshot auxiliam na validação da interface, podemos verificar se a UI está seguindo o que foi planejado pelo nosso designer e também garantir que futuras mudanças no código não irão "quebrar" o layout existente.
