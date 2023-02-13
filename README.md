@@ -1,4 +1,15 @@
-# 1. Testes unitários
+## Sumário
+1. [Testes unitários](#1-testes-unitários)
+2. [Falsos positivos](#2-falsos-positivos)
+3. [Injeção de dependência](#3-injeção-de-dependência)
+4. [Given-When-Then](#4-given---when---then)
+5. [Testes menores e eficientes](#5-testes-menores-e-eficientes)
+6. [Desalocar propriedades da classe de teste](#6-desalocar-propriedades-da-classe-de-teste)
+7. [Spies](#7-spies)
+8. [Fixture](#8-fixture)
+9. [Snapshots](#9-snapshots)
+
+## 1. Testes unitários
 Os testes unitários servem para testar uma unidade do código.
 
 🧐 O que é uma unidade?
@@ -21,6 +32,44 @@ Os testes unitários servem para testar uma unidade do código.
 - Funções públicas (internal, pulic, open);
 - Comunicação entre objetos;
 - Regras de negócio.
+
+## 2. Falsos positivos
+Para que um teste seja efeitivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O XCode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
+
+Veja o exemplo a seguir:
+
+```swift
+class SomePresenter {
+    weak var view: SomeViewProtocol?
+    
+    func doSomething() {
+        view?.presenterAlert()
+    }
+}
+```
+
+
+```swift
+// ❌ Esse teste passará, porém não testamos nada nele. 
+func test_doSomething() {
+    sut.duSomething()
+}
+```
+
+Para tornar o teste melhor, precisamos verificar se a função está realizando a tarefa esperada:
+
+```swift
+// ✅ Agora estamos validando a função de fato
+func test_doSomething_shouldPresentAlert() {
+    // when
+    sut.doSomething()
+
+    // then
+    XCTAssertTrue(viewSpy.presentAlertCalled)
+}
+```
+
+[back to top](#sumário)
 
 ## 3. Injeção de dependência
 A classe e suas funções não devem criar os objetos. Uma boa prática consiste em injetar as dependências, de modo que nossas classes não fiquem acopladas com implementações concretas de outros objetos do sistema.
@@ -186,45 +235,7 @@ class HomeViewModelTestCase: XCTestCase {
 
 Perceba que, nesse teste, garantimos que a função `fetchHomeData` é chamada uma única vez. Caso alguém altere o código e duplique a chamada da função, o teste falhará. Por último e não menos imporntante, caso exista outros métodos dentro da classe de serviço, garantimos que eles não estão sendo chamados onde não devem.
 
-## 4. Falsos positivos
-Para que um teste seja efeitivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O XCode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
-
-Veja o exemplo a seguir:
-
-```swift
-class SomePresenter {
-    weak var view: SomeViewProtocol?
-    
-    func doSomething() {
-        view?.presenterAlert()
-    }
-}
-```
-
-
-```swift
-// ❌ Esse teste passará, porém não testamos nada nele. 
-func test_doSomething() {
-    sut.duSomething()
-}
-```
-
-Para tornar o teste melhor, precisamos verificar se a função está realizando a tarefa esperada:
-
-```swift
-// ✅ Agora estamos validando a função de fato
-func test_doSomething_shouldPresentAlert() {
-    // when
-    sut.doSomething()
-
-    // then
-    XCTAssertTrue(viewSpy.presentAlertCalled)
-}
-```
-
-[back to top](#sumário)
-
-## 5. Given - When - Then
+## 4. Given - When - Then
 Given-When-Then é um estilo de representação de testes. Foi originiado junto ao BDD (Behavior Driven Development) com o intuito de documentar requisitos e testes. De forma simples, significa que o teste será dividido em três partes:
 
 - **Given**: Definimos a configuração do estado inicial de um cenário de teste. Por exemplo, podemos configurar um Stub, definir valores em propriedades da classe em teste (sut) ou chamar alguma função que define o estado inicial para o que irá ser testado.
@@ -334,7 +345,7 @@ func test_fetchUserData_withSuccessRequest_shouldCallOutputSuccessMethod() {
 ```
 [back to top](#sumário)
 
-## 6. Quebrando um teste grande em outros menores
+## 5. Testes menores e eficientes
 Uma prática muito comum no TDD é utilizar uma única asserção por teste. Com métodos de teste bem nomeados, quando o teste falhar, você saberá exatamente onde está o problema porque não há ambiguidade entre várias condições. 
 
 Um teste com muitas afirmações torna difícil fornecer um nome ou descrição significativa. Contudo, isso não significa que todos os testes devam ter apenas uma afirmação. Conceitualmente, afirmar propriedades de um mesmo objeto pode-se considerar um único assert.
@@ -479,7 +490,7 @@ func test_loginSucceeded_shouldNotifyLogin() {
 
 [back to top](#sumário)
 
-## 7. Desalocar propriedades da classe de teste
+## 6. Desalocar propriedades da classe de teste
 
 Estamos acostumados a definir propriedades em nossas classes de testes. Normalmente, as definimos em um método `setUp` para que sejam configuradas corretamente para cada método de teste.
 
@@ -641,7 +652,7 @@ Ao término da execução de cada teste a propriedade é desalocada, com isso di
 
 [back to top](#sumário)
 
-## 8. Spies
+## 7. Spies
 
 Objetos “espiões” servem para saber se métodos foram chamados ou não. Os Spies também podem ser usados como Stubs, que servem para controlar o resultado a ser retornado.
 
@@ -707,7 +718,7 @@ func test_didChangeHighlightedAddress_shouldCallAnalyticsTrackAddressHighlight()
 }
 ```
 
-## 9. Fixture
+## 8. Fixture
 Mesmo conceito dos `getDummy` já existentes. Serve para criar um mock do modelo desejado, e alterar somente o que precisar, quando precisar.
 
 ```swift
