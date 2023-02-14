@@ -781,7 +781,7 @@ Os testes de snapshot auxiliam na validação da interface, podemos verificar se
 
 Com o teste de snapshot podemos testar desde pequenos elementos de UI como botões, views, stack views até uma navigation controller ou view controller.
 
-Os Snapshots devem ser gravados sempre com base em um mesmo device, por exemplo, o iPhone 8 Plus. Normalmente utikizamos um _wrapper_ que parametriza o snapshot com valores padrão.
+Os Snapshots devem ser gravados sempre com base em um mesmo device, por exemplo, o iPhone 8 Plus. Normalmente utilizamos um _wrapper_ que parametriza o snapshot com valores padrão.
 
 Teste de snapshot na prática:
 
