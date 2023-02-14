@@ -52,7 +52,7 @@ class SomePresenter {
 ```swift
 // ❌ Esse teste passará, porém não testamos nada nele. 
 func test_doSomething() {
-    sut.duSomething()
+    sut.doSomething()
 }
 ```
 
