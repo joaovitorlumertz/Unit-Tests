@@ -34,7 +34,7 @@ Os testes unitários servem para testar uma unidade do código.
 - Regras de negócio.
 
 ## 2. Falsos positivos
-Para que um teste seja efeitivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O XCode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
+Para que um teste seja efetivo, devemos definir as asserções necessárias para que o teste passe. Escrever um teste sem asserções não fará com que ele falhe. O Xcode indicará que o trecho de código foi coberto por testes, porém nada foi testado de fato.
 
 Veja o exemplo a seguir:
 
@@ -73,7 +73,7 @@ func test_doSomething_shouldPresentAlert() {
 
 
 ## 3. Given - When - Then
-Given-When-Then é um estilo de representação de testes. Foi originiado junto ao BDD (Behavior Driven Development) com o intuito de documentar requisitos e testes. De forma simples, significa que o teste será dividido em três partes:
+Given-When-Then é um estilo de representação de testes. Foi originado junto ao BDD (Behavior Driven Development) com o intuito de documentar requisitos e testes. De forma simples, significa que o teste será dividido em três partes:
 
 - **Given**: Definimos a configuração do estado inicial de um cenário de teste. Por exemplo, podemos configurar um Stub, definir valores em propriedades da classe em teste (sut) ou chamar alguma função que define o estado inicial para o que irá ser testado.
 
@@ -85,7 +85,7 @@ Given-When-Then é um estilo de representação de testes. Foi originiado junto 
 ```swift
 
 func fetchUserData(userId: Int) {
-    requester.request(.fetchUserData(userId)) { [weak self] result in
+    requester.request(.fetchUserData(userId)) { [weak self] (result: Result<User>) in
         switch result {
             case .success(let data):
                 self?.output?.fetchUserDataSucceeded(data)
@@ -261,7 +261,7 @@ func test_loginSucceeded_shouldNavigateToHomePage_andSetUserOnState_andNotifyLog
     XCTAssertTrue(coordinatorSpy.navigateToHomePageCalled) // Esta é a condição que mudou
     XCTAssertEqual(stateManagerSpy.user, expectedUser)
     XCTAssertEqual(observedNotifiedUser, expectedUser)
-    waitForExpectations(timeout: 4, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
 }
 ```
 
@@ -434,13 +434,13 @@ Test Suite 'SomeClassTestCase' passed at 2023-02-08 21:48:12.342.
 
 ```
 
-Observe que a classe `SomeClass` não foi desalocada da memória. Em geral, isso não deve ser um problema. Porém, em grandes projetos isso pode ser problemático, visto que há milhares de classes de teste. Por consequência, pode diminuir o desempenho da execução dos testes em máquinas de CI, que geralmente não possuem um hardware muito avançado e com grande capacidade de memória e processamento.
+Observe que a classe `SomeClass` não foi desalocada da memória. Em geral, isso não deve ser um problema. Porém, em grandes projetos isso pode ser problemático, visto que há centenas de classes de teste. Por consequência, pode diminuir o desempenho da execução dos testes em máquinas de CI, que geralmente não possuem um hardware muito avançado e com grande capacidade de memória e processamento.
 
 ### Solução
 
 Precisamos desalocar as propriedades da classe de teste.
 
-Para isso precisamos atribuir as propriedades com `nil` depois que cada método de teste for executado. Os métodos `setUp` e `tearDown` podem nos ajudar com isso:
+Para isso atribuímos as propriedades com `nil` depois que cada método de teste for executado. Os métodos `setUp` e `tearDown` podem nos ajudar com isso:
 
 ```swift
 final class SomeClassTestCase: XCTestCase {
@@ -781,38 +781,39 @@ Os testes de snapshot auxiliam na validação da interface, podemos verificar se
 
 Com o teste de snapshot podemos testar desde pequenos elementos de UI como botões, views, stack views até uma navigation controller ou view controller.
 
-Os Snapshots devem ser gravados sempre com base em um mesmo device, por exemplo, o iPhone 8 Plus. Portanto, utilizar um _wrapper_ que parametriza o snapshot com um padrão comum é bastante útil. Como podemos ver na função `assertSnapshot`:
+Os Snapshots devem ser gravados sempre com base em um mesmo device, por exemplo, o iPhone 8 Plus. Normalmente utikizamos um _wrapper_ que parametriza o snapshot com valores padrão.
 
-
-Para usar o _wrapper_:
+Teste de snapshot na prática:
 
 ```swift
 import XCTest
-import SnapshoTesting
+import SnapshotTesting
+@testable import SnapshotApp
 
-class SomeViewTestCase: XCTestCase {
+final class LoginViewControllerTestCase: XCTestCase {
 
-    var sut: SomeView!
-
+    var sut: LoginViewController!
+    
     override func setUp() {
         super.setUp()
-        sut = SomeView()
+        sut = .init()
     }
-
+    
     override func tearDown() {
         sut = nil
         super.tearDown()
     }
-
-    func test_view_withDefaultConfiguration_shouldMatchSnapshot() {
-        sut.frame = CGRect(x: 0, y: 0, width: 375, height: 682)
+    
+    func test_view_shouldMatchSnapshot() {
         assertSnapshot(matching: sut, as: .image)
     }
-}
+   
 ```
 
 A propriedade `isRecording` pode ser utilizada para gerar o snapshot novamente. 
 - Quando isRecording é `true`, todo snapshot é gerado novamente. 
 - Se atente para definir a propriedade `isRecording` como `false` após validar que o snapshot atende ao layout desejado.
 
-Em alguns casos, nossas views utilizam imagens do servidor, isso pode ser problemátio em testes de snapshot, pois as imagens levam um certo tempo para serem "baixadas", ademais não devemos realizar requisições a serviços externos em nossos testes. Considere utilizar mocks que não possuam URLs reais para as imagens.
+Em alguns casos, nossas views utilizam imagens do servidor, isso pode ser problemátio em testes de snapshot, pois as imagens levam um certo tempo para serem "baixadas", ademais não devemos realizar requisições a serviços externos em nossos testes. 
+
+✅ Considere utilizar mocks que não possuam URLs reais para as imagens.
